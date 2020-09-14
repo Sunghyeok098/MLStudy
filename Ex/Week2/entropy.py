@@ -9,7 +9,7 @@ dataSet = pd.read_excel(data_url)
 
 data = pd.DataFrame(dataSet)
 
-features = data[['District','House Type', 'Income', 'Previous Customer']]
+features = data[['District','rHouse Type', 'Income', 'Previous Customer']]
 target = data['Outcome']
 
 print(data, '\n')
