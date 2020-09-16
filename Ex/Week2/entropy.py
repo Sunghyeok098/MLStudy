@@ -4,12 +4,14 @@ import seaborn as sns
 from sklearn import tree
 from sklearn.model_selection import train_test_split
 
-data_url = 'D:\VSCODE\MLStudy\Ex\Week2\dataSet.xlsx'
+data_url = 'Ex\dataSet\week2_dataSet\dataSet.xlsx'
+
+
 dataSet = pd.read_excel(data_url)
 
 data = pd.DataFrame(dataSet)
 
-features = data[['District','rHouse Type', 'Income', 'Previous Customer']]
+features = data[['District','House Type', 'Income', 'Previous Customer']]
 target = data['Outcome']
 
 print(data, '\n')
