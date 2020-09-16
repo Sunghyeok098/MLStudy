@@ -65,9 +65,16 @@ print(confusion_matrix(y_test,forest_gscv.predict(x_test)))
 plt.figure(figsize=(2, 2))
 sns.heatmap(metrics.confusion_matrix(y_test,forest_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 
-list1 = []
-list2 = []
-list3 = []
+
+nEst_gini = []
+mDep_gini = []
+value_gini = []
+nEst_entro = []
+mDep_entro = []
+value_entro = []
+
+value = np.array(forest_gscv.cv_results_["mean_test_score"]).reshape(-1, 3)
+print(value)
 
 for i in range(len(forest_gscv.cv_results_["params"])):
     param1 = forest_gscv.cv_results_["params"][i]['criterion']
@@ -75,34 +82,90 @@ for i in range(len(forest_gscv.cv_results_["params"])):
     param3 = forest_gscv.cv_results_["params"][i]['max_depth']
     
     if(param1 == 'gini'):
-        list1.append(0)
+        nEst_gini.append(param2)
+        mDep_gini.append(param3)
+        value_gini.append(forest_gscv.cv_results_["mean_test_score"][i])
+
     else:
-        list1.append(1)
-    list2.append(param2)
-    list3.append(param3)
+        nEst_entro.append(param2)
+        mDep_entro.append(param3)
+        value_entro.append(forest_gscv.cv_results_["mean_test_score"][i])
 
-    
-value = np.array(forest_gscv.cv_results_["mean_test_score"]).tolist()
+print(nEst_gini)
+print(mDep_gini)
+#print(value_gini)
 
-fig = plt.figure()
-ax1 = fig.add_subplot(111, projection='3d')
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
 
-"""
-xpos = [1, 10, 100]
-ypos = [1, 10, 100]
-num_elements = len(xpos)
-zpos = [0,0,0,0,0,0,0,0,0,0]
-dx = list2
-dy = list3
-dz = value
-ax1.bar3d(xpos, ypos, zpos, dx, dy, dz, color='#00ceaa')
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
 
-ax1.set_xlabel('x axis')
-ax1.set_ylabel('y axis')
-ax1.set_zlabel('z axis')
+zpos=value[0:3]
+print(zpos)
+zpos = zpos.ravel()
+print(type(zpos))
+print(zpos)
+
+dx=0.5
+dy=0.5
+dz=zpos
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+
+ax1.set_xlabel('n_estimators')
+ax1.set_ylabel('max_depth')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('Gini')
 
 plt.show()
-"""
+
+
+print(nEst_entro)
+print(mDep_entro)
+print(value_entro)
+
+value_entro = np.array(value_entro).reshape(-1,3)
+print(value_entro)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+print(value_entro)
+z= value_entro.flatten()
+print(value_entro)
+print(type(z))
+
+dx=0.5
+dy=0.5
+dz=zpos
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('n_estimators')
+ax1.set_ylabel('max_depth')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('Entropy')
+
+plt.show()
+
 
 
 print("\nStart LogisticRegression")
@@ -127,10 +190,6 @@ sns.heatmap(metrics.confusion_matrix(y_test,logisticRegr_gscv.predict(x_test)), 
 
 
 
-
-
-
-
 print("\nStart SVM")
 from sklearn.svm import SVC
 
@@ -150,7 +209,5 @@ print("Best accuracy : ", svclassifier_gscv.best_score_)
 print(confusion_matrix(y_test,svclassifier_gscv.predict(x_test)))  
 plt.figure(figsize=(2, 2))
 sns.heatmap(metrics.confusion_matrix(y_test,svclassifier_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
-plt.show()
-
-
+#plt.show()
 
