@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn import metrics
 
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import style
@@ -15,27 +16,22 @@ data_url = 'Ex\dataSet\week3_dataSet\mnist.csv'
 dataSet = pd.read_csv(data_url)
 
 data = dataSet.copy()
+data = data[data['label'].isin(['0', '1'])]
 
-x_train = data.drop(['label'], axis=1)
-y_train = data['label']
+d1, d2 = train_test_split(data, test_size=0.2)
+train_d1, test_d1 = train_test_split(d1, test_size=0.2)
+
+x_train = train_d1.drop(['label'], axis=1)
+y_train = train_d1['label']
+x_test = test_d1.drop(['label'], axis=1)
+y_test = test_d1['label']
 
 
-
-print(data)
-print(y_train)
-"""
 print("\nStart RandomForest")
-
-data_train, data_test = train_test_split(data, test_size=0.2)
-
-x_train = data_train.drop(['car'], axis=1)
-y_train = data_train['car']
-x_test = data_test.drop(['car'], axis=1)
-y_test = data_test['car']
 
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics
+
 
 forest = RandomForestClassifier()
 
@@ -56,9 +52,16 @@ print(confusion_matrix(y_test,forest_gscv.predict(x_test)))
 plt.figure(figsize=(2, 2))
 sns.heatmap(metrics.confusion_matrix(y_test,forest_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 
-list1 = []
-list2 = []
-list3 = []
+
+nEst_gini = []
+mDep_gini = []
+value_gini = []
+nEst_entro = []
+mDep_entro = []
+value_entro = []
+
+value = np.array(forest_gscv.cv_results_["mean_test_score"]).reshape(-1, 3)
+
 
 for i in range(len(forest_gscv.cv_results_["params"])):
     param1 = forest_gscv.cv_results_["params"][i]['criterion']
@@ -66,40 +69,93 @@ for i in range(len(forest_gscv.cv_results_["params"])):
     param3 = forest_gscv.cv_results_["params"][i]['max_depth']
     
     if(param1 == 'gini'):
-        list1.append(0)
+        nEst_gini.append(param2)
+        mDep_gini.append(param3)
+        value_gini.append(forest_gscv.cv_results_["mean_test_score"][i])
+
     else:
-        list1.append(1)
-    list2.append(param2)
-    list3.append(param3)
+        nEst_entro.append(param2)
+        mDep_entro.append(param3)
+        value_entro.append(forest_gscv.cv_results_["mean_test_score"][i])
 
-    
-value = np.array(forest_gscv.cv_results_["mean_test_score"]).tolist()
 
-fig = plt.figure()
-ax1 = fig.add_subplot(111, projection='3d')
-"""
-"""
-xpos = [1, 10, 100]
-ypos = [1, 10, 100]
-num_elements = len(xpos)
-zpos = [0,0,0,0,0,0,0,0,0,0]
-dx = list2
-dy = list3
-dz = value
-ax1.bar3d(xpos, ypos, zpos, dx, dy, dz, color='#00ceaa')
 
-ax1.set_xlabel('x axis')
-ax1.set_ylabel('y axis')
-ax1.set_zlabel('z axis')
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+zpos=value[0:3]
+zpos = zpos.ravel()
+
+
+dx=0.5
+dy=0.5
+dz=zpos
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+
+ax1.set_xlabel('n_estimators')
+ax1.set_ylabel('max_depth')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('Gini')
+
+
+value_entro = np.array(value_entro).reshape(-1,3)
+
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+
+zpos= value_entro.flatten()
+
+
+dx=0.5
+dy=0.5
+dz=zpos
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('n_estimators')
+ax1.set_ylabel('max_depth')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('Entropy')
 
 plt.show()
-"""
-"""
+
+
+
+
+
+
+
+
+
+
 
 print("\nStart LogisticRegression")
 from sklearn.linear_model import LogisticRegression
 
-logisticRegr = LogisticRegression(C=0.1, solver="liblinear", max_iter=50)
+logisticRegr = LogisticRegression()
 param_grid = {'C':[0.1, 1, 10], 'solver':['liblinear', 'lbfgs', 'sag'], 'max_iter':[50, 100, 200]}
 logisticRegr_gscv = GridSearchCV(logisticRegr, param_grid, cv=5)
 logisticRegr_gscv.fit(x_train, y_train)
@@ -117,13 +173,127 @@ plt.figure(figsize=(2, 2))
 sns.heatmap(metrics.confusion_matrix(y_test,logisticRegr_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 
 
+value_liblinear = []
+value_lbfgs = []
+value_sag = []
+
+value = np.array(logisticRegr_gscv.cv_results_["mean_test_score"]).reshape(-1, 3)
+
+
+for i in range(len(logisticRegr_gscv.cv_results_["params"])):
+    param1 = logisticRegr_gscv.cv_results_["params"][i]['solver']
+    
+    if(param1 == 'liblinear'):
+        value_liblinear.append(logisticRegr_gscv.cv_results_["mean_test_score"][i])
+    
+    elif(param1 == 'lbfgs'):
+        value_lbfgs.append(logisticRegr_gscv.cv_results_["mean_test_score"][i])
+
+    else:
+        value_sag.append(logisticRegr_gscv.cv_results_["mean_test_score"][i])
+
+
+value_liblinear = np.array(value_liblinear).reshape(-1,3)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_liblinear.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('max_iter')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('liblinear')
+
+
+
+value_lbfgs = np.array(value_lbfgs).reshape(-1,3)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_lbfgs.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('max_iter')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('lbfgs')
+
+
+value_sag = np.array(value_sag).reshape(-1,3)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['1', '10', '100',])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['1', '10', '100',])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_sag.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('max_iter')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('sag')
+
+plt.show()
+
+
+
+
+
+
+
+
 
 
 
 print("\nStart SVM")
 from sklearn.svm import SVC
 
-svclassifier = SVC(kernel='linear' )
+svclassifier = SVC()
 param_grid = {'C':[0.1, 1, 10], 'kernel':['linear', 'poly', 'rbf', 'sigmoid'], 'gamma':[0.01, 0.1, 1.0, 10.0]}
 svclassifier_gscv = GridSearchCV(svclassifier, param_grid, cv=5)
 svclassifier_gscv.fit(x_train, y_train)
@@ -139,8 +309,144 @@ print("Best accuracy : ", svclassifier_gscv.best_score_)
 print(confusion_matrix(y_test,svclassifier_gscv.predict(x_test)))  
 plt.figure(figsize=(2, 2))
 sns.heatmap(metrics.confusion_matrix(y_test,svclassifier_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
+
+
+
+
+value_linear = []
+value_poly = []
+value_rbf = []
+value_sigmoid = []
+
+
+for i in range(len(svclassifier_gscv.cv_results_["params"])):
+    param1 = svclassifier_gscv.cv_results_["params"][i]['kernel']
+    
+    if(param1 == 'linear'):
+        value_linear.append(svclassifier_gscv.cv_results_["mean_test_score"][i])
+    
+    elif(param1 == 'poly'):
+        value_poly.append(svclassifier_gscv.cv_results_["mean_test_score"][i])
+    
+    elif(param1 == 'rbf'):
+        value_rbf.append(svclassifier_gscv.cv_results_["mean_test_score"][i])
+
+    else:
+        value_sigmoid.append(svclassifier_gscv.cv_results_["mean_test_score"][i])
+
+
+value_linear = np.array(value_linear).reshape(-1,4)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['0.1', '1', '10'])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['0.01', '0.1', '1.0', '10.0'])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+
+z= value_linear.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('gamma')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('linear')
+
+
+
+value_poly = np.array(value_poly).reshape(-1,4)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['0.1', '1', '10'])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['0.01', '0.1', '1', '10'])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_poly.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('gamma')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('poly')
+
+
+value_rbf = np.array(value_rbf).reshape(-1,4)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['0.1', '1', '10'])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['0.01', '0.1', '1.0', '10.0'])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_rbf.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('gamma')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('rbf')
+
+value_sigmoid = np.array(value_sigmoid).reshape(-1,4)
+fig = plt.figure(figsize=(8, 8))
+ax1 = fig.add_subplot(projection='3d')
+
+xlabels = np.array(['0.1', '1', '10'])
+xpos = np.arange(xlabels.shape[0])
+ylabels = np.array(['0.01', '0.1', '1.0', '10.0'])
+ypos = np.arange(ylabels.shape[0])
+xposM, yposM = np.meshgrid(xpos, ypos, copy=False)
+
+z= value_sigmoid.flatten()
+
+dx=0.5
+dy=0.5
+dz=z
+ax1.w_xaxis.set_ticks(xpos + dx/2.)
+ax1.w_xaxis.set_ticklabels(xlabels)
+
+ax1.w_yaxis.set_ticks(ypos + dy/2.)
+ax1.w_yaxis.set_ticklabels(ylabels)
+ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
+
+ax1.set_xlabel('C')
+ax1.set_ylabel('gamma')
+ax1.set_zlabel('Accuracy')
+ax1.set_title('sigmoid')
+
+
 plt.show()
-
-
-
-"""
