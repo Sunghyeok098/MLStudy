@@ -16,22 +16,24 @@ data_url = 'Ex\dataSet\week3_dataSet\mnist.csv'
 dataSet = pd.read_csv(data_url)
 
 data = dataSet.copy()
-data = data[data['label'].isin(['0', '1'])]
+#data = data[data['label'].isin(['0', '1'])]
 
-d1, d2 = train_test_split(data, test_size=0.2)
-train_d1, test_d1 = train_test_split(d1, test_size=0.2)
+a, d1 = train_test_split(data, test_size=0.05)
+a, d2 = train_test_split(data, test_size=0.05)
+train_d1, test_d1 = train_test_split(d1, test_size=0.1)
 
 x_train = train_d1.drop(['label'], axis=1)
 y_train = train_d1['label']
 x_test = test_d1.drop(['label'], axis=1)
 y_test = test_d1['label']
 
+d2_x = d2.drop(['label'], axis=1)
+d2_y = d2['label']
+
+
 
 print("\nStart RandomForest")
-
-
 from sklearn.ensemble import RandomForestClassifier
-
 
 forest = RandomForestClassifier()
 
@@ -49,33 +51,24 @@ print("\n")
 print("Best paramter : ", forest_gscv.best_params_)
 print("Best accuracy : ", forest_gscv.best_score_)
 print(confusion_matrix(y_test,forest_gscv.predict(x_test)))  
-plt.figure(figsize=(2, 2))
+plt.figure(figsize=(6, 6))
+
 sns.heatmap(metrics.confusion_matrix(y_test,forest_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
+plt.title('Random Forest')
 
 
-nEst_gini = []
-mDep_gini = []
 value_gini = []
-nEst_entro = []
-mDep_entro = []
 value_entro = []
 
 value = np.array(forest_gscv.cv_results_["mean_test_score"]).reshape(-1, 3)
 
-
 for i in range(len(forest_gscv.cv_results_["params"])):
     param1 = forest_gscv.cv_results_["params"][i]['criterion']
-    param2 = forest_gscv.cv_results_["params"][i]['n_estimators']
-    param3 = forest_gscv.cv_results_["params"][i]['max_depth']
-    
+
     if(param1 == 'gini'):
-        nEst_gini.append(param2)
-        mDep_gini.append(param3)
         value_gini.append(forest_gscv.cv_results_["mean_test_score"][i])
 
     else:
-        nEst_entro.append(param2)
-        mDep_entro.append(param3)
         value_entro.append(forest_gscv.cv_results_["mean_test_score"][i])
 
 
@@ -169,7 +162,8 @@ print("\n")
 print("Best parameter : ",logisticRegr_gscv.best_params_)
 print("Best accuracy : ", logisticRegr_gscv.best_score_)
 print(confusion_matrix(y_test,logisticRegr_gscv.predict(x_test))) 
-plt.figure(figsize=(2, 2))
+plt.figure(figsize=(6, 6))
+plt.title('logisticRegression')
 sns.heatmap(metrics.confusion_matrix(y_test,logisticRegr_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 
 
@@ -276,7 +270,7 @@ ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
 ax1.set_xlabel('C')
 ax1.set_ylabel('max_iter')
 ax1.set_zlabel('Accuracy')
-ax1.set_title('sag')
+ax1.set_title('logistic - sag')
 
 plt.show()
 
@@ -307,7 +301,8 @@ print("\n")
 print("Best parmeter : ",svclassifier_gscv.best_params_)
 print("Best accuracy : ", svclassifier_gscv.best_score_)    
 print(confusion_matrix(y_test,svclassifier_gscv.predict(x_test)))  
-plt.figure(figsize=(2, 2))
+plt.figure(figsize=(6, 6))
+plt.title('svm')
 sns.heatmap(metrics.confusion_matrix(y_test,svclassifier_gscv.predict(x_test)), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 
 
@@ -362,7 +357,7 @@ ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
 ax1.set_xlabel('C')
 ax1.set_ylabel('gamma')
 ax1.set_zlabel('Accuracy')
-ax1.set_title('linear')
+ax1.set_title('svm - linear')
 
 
 
@@ -391,7 +386,7 @@ ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
 ax1.set_xlabel('C')
 ax1.set_ylabel('gamma')
 ax1.set_zlabel('Accuracy')
-ax1.set_title('poly')
+ax1.set_title('svm - poly')
 
 
 value_rbf = np.array(value_rbf).reshape(-1,4)
@@ -419,7 +414,7 @@ ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
 ax1.set_xlabel('C')
 ax1.set_ylabel('gamma')
 ax1.set_zlabel('Accuracy')
-ax1.set_title('rbf')
+ax1.set_title('svm - rbf')
 
 value_sigmoid = np.array(value_sigmoid).reshape(-1,4)
 fig = plt.figure(figsize=(8, 8))
@@ -446,7 +441,28 @@ ax1.bar3d(xposM.ravel(), yposM.ravel(), dz*0, dx, dy, dz)
 ax1.set_xlabel('C')
 ax1.set_ylabel('gamma')
 ax1.set_zlabel('Accuracy')
-ax1.set_title('sigmoid')
+ax1.set_title('svm - sigmoid')
 
 
+plt.show()
+
+
+print("\nEnsemble classifier start")
+from sklearn.ensemble import VotingClassifier
+from sklearn.metrics import accuracy_score
+
+vote_clf = VotingClassifier(estimators=[('random_forest', forest_gscv), ('logistic_regression', logisticRegr_gscv), ('svc', svclassifier_gscv)], voting='hard')
+
+vote_clf = vote_clf.fit(x_train, y_train)
+vote_predict = vote_clf.predict(d2_x)
+
+print("Ensemble classifier accuracy : ", accuracy_score(d2_y, vote_predict))
+
+#Get the confusion matrix
+cf_matrix = confusion_matrix(d2_y, vote_predict)
+print(cf_matrix)
+
+plt.figure(figsize=(6, 6))
+sns.heatmap(metrics.confusion_matrix(d2_y, vote_predict), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
+plt.title("Ensemble classifier Confusion Matrix")
 plt.show()
