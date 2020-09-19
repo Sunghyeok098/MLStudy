@@ -50,6 +50,7 @@ for i in range(len(forest_gscv.cv_results_["params"])):
 print("\n")
 print("Best paramter : ", forest_gscv.best_params_)
 print("Best accuracy : ", forest_gscv.best_score_)
+forest_accuracy = forest_gscv.best_score_
 print(confusion_matrix(y_test,forest_gscv.predict(x_test)))  
 plt.figure(figsize=(6, 6))
 
@@ -161,6 +162,7 @@ for i in range(len(logisticRegr_gscv.cv_results_["params"])):
 print("\n")
 print("Best parameter : ",logisticRegr_gscv.best_params_)
 print("Best accuracy : ", logisticRegr_gscv.best_score_)
+logistic_accuracy = logisticRegr_gscv.best_score_
 print(confusion_matrix(y_test,logisticRegr_gscv.predict(x_test))) 
 plt.figure(figsize=(6, 6))
 plt.title('logisticRegression')
@@ -300,6 +302,7 @@ for i in range(len(svclassifier_gscv.cv_results_["params"])):
 print("\n")
 print("Best parmeter : ",svclassifier_gscv.best_params_)
 print("Best accuracy : ", svclassifier_gscv.best_score_)    
+svm_accuracy = svclassifier_gscv.best_score_
 print(confusion_matrix(y_test,svclassifier_gscv.predict(x_test)))  
 plt.figure(figsize=(6, 6))
 plt.title('svm')
@@ -457,7 +460,7 @@ vote_clf = vote_clf.fit(x_train, y_train)
 vote_predict = vote_clf.predict(d2_x)
 
 print("Ensemble classifier accuracy : ", accuracy_score(d2_y, vote_predict))
-
+ensemble_accuracy = accuracy_score(d2_y, vote_predict)
 #Get the confusion matrix
 cf_matrix = confusion_matrix(d2_y, vote_predict)
 print(cf_matrix)
@@ -466,3 +469,9 @@ plt.figure(figsize=(6, 6))
 sns.heatmap(metrics.confusion_matrix(d2_y, vote_predict), annot=True, fmt='.2f', linewidths=.1, cmap='Blues')
 plt.title("Ensemble classifier Confusion Matrix")
 plt.show()
+
+
+print("Random forest accuracy : ", forest_accuracy)
+print("logistic regreesion accuracy : ", logistic_accuracy)
+print("svm accuracy : ", svm_accuracy)
+print("ensemble accurcay : ", ensemble_accuracy)
