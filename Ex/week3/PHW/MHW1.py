@@ -18,8 +18,8 @@ dataSet = pd.read_csv(data_url)
 data = dataSet.copy()
 #data = data[data['label'].isin(['0', '1'])]
 
-a, d1 = train_test_split(data, test_size=0.05)
-a, d2 = train_test_split(data, test_size=0.05)
+a, d1 = train_test_split(data, test_size=0.1)
+a, d2 = train_test_split(data, test_size=0.1)
 train_d1, test_d1 = train_test_split(d1, test_size=0.1)
 
 x_train = train_d1.drop(['label'], axis=1)
