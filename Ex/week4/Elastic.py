@@ -24,7 +24,7 @@ y = data['charges']
 
 
 lin_reg = LinearRegression()
-MSE5 = cross_val_score(lin_reg, x5, y,  scoring='neg_mean_squared_error', cv=5)
+MSE5 = cross_val_score(lin_reg, x5, y,  scoring='neg_mean_squared_error', cv=10)
 mean_MSE = np.mean(MSE5)  
 print('linear regreesion : ')
 print(mean_MSE)
