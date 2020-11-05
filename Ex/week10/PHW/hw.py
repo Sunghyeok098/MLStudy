@@ -17,7 +17,6 @@ data.replace({'?':np.nan}, inplace=True)
 data = data.fillna(method='ffill')
 
 
-
 from sklearn.preprocessing import LabelEncoder
 from sklearn import preprocessing
 
@@ -33,7 +32,7 @@ y = data['class']
 from sklearn.cluster import DBSCAN
 
 
-"""
+
 eps = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
 min_samples = [5, 10, 20, 50, 100]
 algorithm = ['ball_tree', 'kd_tree', 'brute']
@@ -116,7 +115,6 @@ for i in eps:
                 print('Purity : ', round(sum/len(y), 2))
 
 
-"""
 x = data.drop(['class'], axis=1)
 y = data['class']
 
