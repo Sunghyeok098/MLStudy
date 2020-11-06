@@ -32,7 +32,6 @@ y = data['class']
 from sklearn.cluster import DBSCAN
 
 
-
 eps = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
 min_samples = [5, 10, 20, 50, 100]
 algorithm = ['ball_tree', 'kd_tree', 'brute']
@@ -71,12 +70,11 @@ for i in eps:
             
 
 
-
-
 x = data.drop(['class'], axis=1)
 y = data['class']
 
-scaler = preprocessing.MinMaxScaler(feature_range=(0, 10)) 
+#scaler = preprocessing.MinMaxScaler(feature_range=(0, 10)) 
+scaler = preprocessing.MinMaxScaler() 
 x = scaler.fit_transform(x) 
 
 eps = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
@@ -113,6 +111,7 @@ for i in eps:
                 
                 print('dbscan eps : {eps}, min_samples {min_samples}, algorithm {algorithm}' .format(eps=i, min_samples=j, algorithm=k))
                 print('Purity : ', round(sum/len(y), 2))
+
 
 
 x = data.drop(['class'], axis=1)
@@ -156,3 +155,4 @@ for i in eps:
                 print('dbscan eps : {eps}, min_samples {min_samples}, algorithm {algorithm}' .format(eps=i, min_samples=j, algorithm=k))
                 print('Purity : ', round(sum/len(y), 2))
             
+
