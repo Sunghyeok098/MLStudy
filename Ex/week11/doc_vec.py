@@ -14,3 +14,23 @@ with open("Ex/dataSet/week11_dataSet/", encoding='UTF-8') as file:
                 sentences.append(l)
 
 print(sentences)
+
+
+from numpy import matrix
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+import pandas as pd
+import re
+
+sentences = list()
+with open("resources/dataset.txt") as file:
+    for line in file:
+        for l in re.split(r"\.\s|\?\s|\!\s|\n",line):
+            if l:
+                sentences.append(l)
+print(sentences)
+
+# create a vectorizer model
+vectorizer = TfidfVectorizer()
+# fit the model to train data to create a normalized TF-IDF
+
