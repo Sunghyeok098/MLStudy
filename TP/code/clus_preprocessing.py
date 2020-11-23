@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 
 na_values = ["None"]
 
-data = pd.read_csv("data/cluster_data.csv", na_values=na_values, index_col='CountryCode')
+data = pd.read_csv("TP/dataset/clustering/cluster_data.csv", na_values=na_values, index_col='CountryCode')
 income = data['IncomeGroup']
 data.drop(columns=['IncomeGroup'], inplace=True)
 
@@ -26,4 +26,4 @@ print(data_scaled)
 
 data_scaled = pd.merge(data_scaled, income, left_index=True, right_index=True)
 
-data_scaled.to_csv("data/pre_cluster.csv")
+data_scaled.to_csv("TP/dataset/clustering/pre_cluster.csv")

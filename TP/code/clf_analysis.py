@@ -11,6 +11,7 @@ from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import accuracy_score
@@ -25,14 +26,31 @@ pd.set_option('display.max_columns', 100)
 data_url = 'TP/dataset/classification/labeling_data.csv'
 data = pd.read_csv(data_url)
 
-data_train, data_test = train_test_split(data, test_size=0.3)
+col = [ 'CurrentEquipmentDays', 'MadeCallToRetentionTeam', 'RetentionCalls', 'HandsetWebCapable', 'TotalRecurringCharge', 'MonthlyMinutes', 
+'CreditRating', 'OffPeakCallsInOut', 'HandsetModels', 'PeakCallsInOut', 'ReceivedCalls', 'CustomerCareCalls', 'RetentionOffersAccepted',
+'UniqueSubs', 'PercChangeMinutes', 'InboundCalls', 'Handsets', 'OutboundCalls', 'Age', 'HandsetRefurbished', 'UnansweredCalls', 'Churn']
+
+select_data = pd.DataFrame()
+
+for i in col:
+    select_data = pd.concat([select_data, data[i]], axis=1)
+
+print(select_data)
+data_train, data_test = train_test_split(data, test_size=0.2)
 
 x_train = data_train.drop(['Churn'], axis=1)
 y_train = data_train['Churn']
 x_test = data_test.drop(['Churn'], axis=1)
 y_test = data_test['Churn']
 
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr,tpr,linewidth=2, label=label)
+    plt.plot([0,1],[0,1],'k--')
+    plt.axis([0,1,0,1])
+    plt.xlabel('FPR',fontsize=16)
+    plt.ylabel('TPR',fontsize=16)
 
+"""
 # Logistic Regression
 print("\nStart LogisticRegression")
 
@@ -158,8 +176,65 @@ plot_roc_curve(fpr_fc,tpr_fc, "Random Forest")
 plt.show()
 
 print('ROC Score : ',roc_auc_score(y_train,y_score[:,1]))
+"""
 
 
+
+
+# voting hard
+print("\nStart Voting")
+
+log_clf = LogisticRegression(C=0.1, max_iter=100, solver='liblinear')
+knn_clf = KNeighborsClassifier(algorithm='ball_tree', n_neighbors=4, weights='uniform')
+dec_clf = DecisionTreeClassifier(criterion='entropy', max_depth=5)
+rnd_clf = RandomForestClassifier(criterion='entropy', max_depth=100, n_estimators=100)
+
+voting_clf = VotingClassifier(estimators=[('lr', log_clf)], voting='hard')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+ 
+voting_clf = VotingClassifier(estimators=[('kn', knn_clf)], voting='hard')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+voting_clf = VotingClassifier(estimators=[('dc', dec_clf)], voting='hard')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+voting_clf = VotingClassifier(estimators=[('rf', rnd_clf)], voting='hard')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+
+
+voting_clf = VotingClassifier(estimators=[('lr', log_clf)], voting='soft')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+ 
+voting_clf = VotingClassifier(estimators=[('kn', knn_clf)], voting='soft')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+voting_clf = VotingClassifier(estimators=[('dc', dec_clf)], voting='soft')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+voting_clf = VotingClassifier(estimators=[('rf', rnd_clf)], voting='soft')
+voting_clf.fit(x_train, y_train)
+y_pred = voting_clf.predict(x_test)
+print(accuracy_score(y_test,y_pred))
+
+
+
+
+"""
 # SVC
 print("\nStart SVC")
 
@@ -188,51 +263,4 @@ plot_roc_curve(fpr_svc,tpr_svc, "SVC")
 plt.show()
 
 print('ROC Score : ',roc_auc_score(y_train,y_score))
-
-
-# voting hard
-print("\nStart Voting")
-
-log_clf = logisticRegr_gscv
-knn_clf = knnclassifier_gscv
-dec_clf = deClassifier_gscv
-rnd_clf = forestClassifier_gscv
-svm_clf = svclassifier_gscv
-
-voting_clf = VotingClassifier(estimators=[('lr',log_clf),
-                                         ('kn',knn_clf),
-                                          ('dc',dec_clf),
-                                          ('rf',rnd_clf),
-                                         ('svc',svm_clf)],
-                             voting='hard')
-voting_clf.fit(x_train, y_train)
-
-
-for clf in (log_clf, knn_clf, dec_clf, rnd_clf, svm_clf, voting_clf):
-    clf.fit(x_train, y_train)
-    y_pred = clf.predict(x_test)
-    print(clf.__class__.__name__, accuracy_score(y_test,y_pred))
-
-
-# voting soft
-log_clf = logisticRegr_gscv
-knn_clf = knnclassifier_gscv
-dec_clf = deClassifier_gscv
-rnd_clf = forestClassifier_gscv
-svm_clf = svclassifier_gscv
-
-voting_clf = VotingClassifier(estimators=[('lr',log_clf),
-                                         ('kn',knn_clf),
-                                          ('dc',dec_clf),
-                                          ('rf',rnd_clf),
-                                         ('svc',svm_clf)],
-                             voting='soft')
-voting_clf.fit(x_train, y_train)
-
-
-for clf in (log_clf, knn_clf, dec_clf, rnd_clf, svm_clf, voting_clf):
-    clf.fit(x_train, y_train)
-    y_pred = clf.predict(x_test)
-    print(clf.__class__.__name__, accuracy_score(y_test,y_pred))
-
-
+"""
