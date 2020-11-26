@@ -30,7 +30,7 @@ def show_result(cluster, income, pca_component, title):
     plt.show()
 
 
-data = pd.read_csv("TP/dataset/clustering/pre_cluster.csv")
+data = pd.read_csv("data/pre_cluster.csv")
 index = data['Unnamed: 0']
 income = data['IncomeGroup'].to_numpy()
 data.drop(columns=['Unnamed: 0', 'IncomeGroup'], inplace=True)
@@ -41,6 +41,17 @@ pca_data = pca.fit_transform(data)
 # print(sum(pca.explained_variance_ratio_))
 xyz = PCA(n_components=3)  # 3D (x,y,z)
 xyz_data = xyz.fit_transform(data)
+
+# n_components = [1,2,3,4,5,6,7,8,9]
+# variance_ratio = []
+# for i in n_components:
+#     p = PCA(n_components=i)
+#     temp = p.fit_transform(data)
+#     variance_ratio.append(sum(p.explained_variance_ratio_))
+# plt.plot(n_components, variance_ratio)
+# plt.xlabel('n_components')
+# plt.ylabel('explained variance ratio')
+# plt.show()
 
 """ K-Means Part """
 param_k = {'n_cluster': [3, 4, 5],
@@ -53,11 +64,10 @@ result = kmeans.predict(pca_data)
 show_result(result, income, xyz_data, "K-Means")
 
 """ DBSCAN PART """
-param_DBSCAN = {'eps': [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
-                'min_samples': [3, 5, 10, 15, 20, 30, 50, 100]}
-dbscan = DBSCAN(eps=param_DBSCAN['eps'][3], min_samples=param_DBSCAN['min_samples'][3])
+param_DBSCAN = {'eps': [0.1, 0.2, 0.5, 1, 1.5, 2],
+                'min_samples': [3, 5, 10, 15, 20]}
+dbscan = DBSCAN(eps=param_DBSCAN['eps'][4], min_samples=param_DBSCAN['min_samples'][0])
 result = dbscan.fit_predict(data)
-
 show_result(result, income, pca_data, "DBSCAN")
 
 # """ EM PART """

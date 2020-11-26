@@ -66,4 +66,4 @@ for c_code in country_codes:
 df_new.columns = columns
 df_new.set_index('CountryCode', drop=True, inplace=True)
 df_new.fillna('Not exist', inplace=True)
-df_new.to_csv('dataSet/clustring/cluster_data.csv')
+df_new.to_csv('data/cluster_data.csv')
